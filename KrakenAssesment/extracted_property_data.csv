@@ -1,0 +1,7 @@
+address,price,rooms,area,bathrooms,kitchens,images
+"Centru, Cluj Napoca","589,000 €",3,95 m2,2,2,"['extracted_images/page_0_img_1.png', 'extracted_images/page_0_img_2.png', 'extracted_images/page_0_img_3.png', 'extracted_images/page_0_img_4.png', 'extracted_images/page_0_img_5.png', 'extracted_images/page_0_img_6.png']"
+"Borhanci, Cluj Napoca","210,000 €",3,62 m2,1,1,"['extracted_images/page_3_img_1.png', 'extracted_images/page_3_img_2.png', 'extracted_images/page_3_img_3.png', 'extracted_images/page_3_img_4.png', 'extracted_images/page_3_img_5.png', 'extracted_images/page_3_img_6.png']"
+"Europa, Cluj Napoca","175,000 €",2,54 m2,1,1,"['extracted_images/page_6_img_1.png', 'extracted_images/page_6_img_2.png', 'extracted_images/page_6_img_3.png', 'extracted_images/page_6_img_4.png', 'extracted_images/page_6_img_5.png']"
+"Iris, Cluj Napoca","143,000 €",2,43 m2,1,1,"['extracted_images/page_9_img_1.png', 'extracted_images/page_9_img_2.png', 'extracted_images/page_9_img_3.png', 'extracted_images/page_9_img_4.png']"
+"Someseni, Cluj Napoca","185,000 €",2,45 m2,1,1,"['extracted_images/page_12_img_1.png', 'extracted_images/page_12_img_2.png', 'extracted_images/page_12_img_3.png', 'extracted_images/page_12_img_4.png', 'extracted_images/page_12_img_5.png', 'extracted_images/page_12_img_6.png']"
+"Zorilor, Cluj Napoca","205,000 €",2,55 m2,1,1,"['extracted_images/page_15_img_1.png', 'extracted_images/page_15_img_2.png', 'extracted_images/page_15_img_3.png', 'extracted_images/page_15_img_4.png', 'extracted_images/page_15_img_5.png']"
