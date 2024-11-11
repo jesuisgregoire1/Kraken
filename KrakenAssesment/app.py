@@ -144,7 +144,6 @@ class PropertyEvaluationApp(QWidget):
             self.results_label.setText("Please select images and provide a location.")
             return
 
-
         image_features = [self.image_processing.get_image_features(img_path) for img_path in self.selected_images]
         img = np.mean(image_features, axis=0).reshape(1, -1)
 
@@ -177,6 +176,7 @@ class PropertyEvaluationApp(QWidget):
                                    f"Predicted Kitchens: {predicted_kitchens:.2f}\n"
                                    f"Predicted Bathrooms: {predicted_bathrooms:.2f}\n"
                                    f"Predicted Property Value: {predicted_value:.2f}€")
+
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)

@@ -10,7 +10,7 @@ class ImageProcessing:
         # initialize ResNet50 model for extraction of features
         self._resnet_model = ResNet50(include_top=False, weights='imagenet', pooling='avg')
 
-        # Initialize ImageDataGenerator for data augmentation
+        # data augmentation
         self.datagen = ImageDataGenerator(
             rotation_range=40,  # randomly rotate images
             width_shift_range=0.2,  # shift images horizontally
