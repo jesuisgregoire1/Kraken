@@ -1,51 +1,53 @@
-import keras._tf_keras.keras.applications
 import numpy as np
 import tensorflow as tf
+import os
 from keras._tf_keras.keras.preprocessing.image import ImageDataGenerator, load_img, img_to_array
 from keras._tf_keras.keras.applications import ResNet50
-import os
-
-# Define ResNet50 model for feature extraction
-resnet_model = ResNet50(include_top=False, weights='imagenet', pooling='avg')
 
 
-def get_image_features(img_path):
-    """Load, preprocess, and extract features from a single image using ResNet50."""
-    if not os.path.exists(img_path):
-        print(f"Warning: Image not found at {img_path}")
-        return None
+class ImageProcessing:
+    def __init__(self):
+        # initialize ResNet50 model for extraction of features
+        self._resnet_model = ResNet50(include_top=False, weights='imagenet', pooling='avg')
 
-    # Load and resize the image (224, 224), as expected by ResNet50
-    img = load_img(img_path, target_size=(224, 224))
-    img_array = img_to_array(img)  # Convert image to numpy array
+        # Initialize ImageDataGenerator for data augmentation
+        self.datagen = ImageDataGenerator(
+            rotation_range=40,  # randomly rotate images
+            width_shift_range=0.2,  # shift images horizontally
+            height_shift_range=0.2,  # shift images vertically
+            shear_range=0.2,  # shear
+            zoom_range=0.2,  # zoom into
+            horizontal_flip=True,  # randomly flip the images horizontally
+            fill_mode='nearest'  # fill the pixels after transformation
+        )
 
-    # Preprocess the image for ResNet50
-    img_array = np.expand_dims(img_array, axis=0)  # Add batch dimension
-    img_array = tf.keras.applications.resnet50.preprocess_input(img_array)  # Preprocess input for ResNet50
+    def get_image_features(self, img_path):
+        if not os.path.exists(img_path):
+            print(f"Warning: Image not found at {img_path}")
+            return None
 
-    # Extract features using ResNet50
-    features = resnet_model.predict(img_array)
+        img = load_img(img_path, target_size=(224, 224))  # resize the image (224, 224)
+        img_array = img_to_array(img)  # convert image to numpy array
+        img_array = np.expand_dims(img_array, axis=0)  # add batch dimension
+        img_array = tf.keras.applications.resnet50.preprocess_input(img_array)  # preprocess input for ResNet50
 
-    return features.flatten()
+        augmented_images = self.datagen.flow(img_array, batch_size=1)  # generate augmented images
 
+        features = self._resnet_model.predict(augmented_images[0])  # predict features
+        return features.flatten()
 
-def process_property_images(properties_df):
-    """Process all images for each property and extract features."""
-    properties_df['image_features'] = None  # Initialize a column for image features
+    def process_property_images(self, properties_df):
+        properties_df['image_features'] = None  # initialize a column for image features
+        for idx, row in properties_df.iterrows():
+            images = row['images']
+            features_for_property = []
+            for img_path in images:
+                features = self.get_image_features(img_path)  # extract features for each image
+                if features is not None:
+                    features_for_property.append(features)
 
-    for idx, row in properties_df.iterrows():
-        images = row['images']
-        features_for_property = []
-
-        for img_path in images:
-            # Extract features for each image
-            features = get_image_features(img_path)
-            if features is not None:
-                features_for_property.append(features)
-
-        # Compute average features for all images of this property
-        if features_for_property:
-            avg_features = np.mean(features_for_property, axis=0)
-            properties_df.at[idx, 'image_features'] = avg_features  # Store average features in DataFrame
-
-    return properties_df
+            # average features for all images of this property
+            if features_for_property:
+                avg_features = np.mean(features_for_property, axis=0)
+                properties_df.at[idx, 'image_features'] = avg_features  # store average features in DataFrame
+        return properties_df

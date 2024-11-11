@@ -1,26 +1,29 @@
 import sys
-from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QPushButton, QFileDialog, QLabel, QLineEdit, QHBoxLayout, QScrollArea, QFrame, QVBoxLayout
+import numpy as np
+from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QPushButton, QFileDialog, QLabel, QLineEdit, QScrollArea
 from PyQt5.QtGui import QPixmap, QFont
 from PyQt5.QtCore import Qt
+from keras.src.saving import load_model
+from image_processing import ImageProcessing
+from location_processing import LocationProcessor
 
 
 class PropertyEvaluationApp(QWidget):
     def __init__(self):
         super().__init__()
-
+        self.image_processing = ImageProcessing()
+        self.location_processing = LocationProcessor()
         self.setWindowTitle("Property Evaluation Demo")
         self.setGeometry(100, 100, 800, 600)
-
-        # Main layout
+        self.model = load_model('best_model.keras')  # load your pre-trained model
         self.layout = QVBoxLayout()
 
-        # Set window background color
         self.setStyleSheet("background-color: #f0f0f0;")
 
         # Location input
         self.location_label = QLabel("Enter Property Location:")
         self.location_label.setFont(QFont("Arial", 12, QFont.Bold))
-        self.location_label.setStyleSheet("color: #333;")
+        self.location_label.setStyleSheet("color: black;")
         self.layout.addWidget(self.location_label)
 
         self.location_input = QLineEdit()
@@ -30,10 +33,12 @@ class PropertyEvaluationApp(QWidget):
             border-radius: 5px;
             border: 1px solid #ccc;
             background-color: white;
+            color: black;
+            font-family: Arial, sans-serif;
         """)
         self.layout.addWidget(self.location_input)
 
-        # Image selection button
+        # image selection button
         self.select_button = QPushButton("Select Property Images")
         self.select_button.setStyleSheet("""
             padding: 12px 24px;
@@ -46,11 +51,11 @@ class PropertyEvaluationApp(QWidget):
         self.select_button.clicked.connect(self.select_images)
         self.layout.addWidget(self.select_button)
 
-        # Scrollable area for image previews
+        # scrollable area for image previews
         self.image_preview_scroll_area = QScrollArea()
         self.image_preview_scroll_area.setWidgetResizable(True)
         self.image_preview_widget = QWidget()
-        self.image_preview_layout = QVBoxLayout(self.image_preview_widget)  # Changed to QVBoxLayout for vertical scrolling
+        self.image_preview_layout = QVBoxLayout(self.image_preview_widget)
         self.image_preview_scroll_area.setWidget(self.image_preview_widget)
         self.layout.addWidget(self.image_preview_scroll_area)
 
@@ -58,19 +63,19 @@ class PropertyEvaluationApp(QWidget):
         self.image_paths_scroll_area = QScrollArea()
         self.image_paths_scroll_area.setWidgetResizable(True)
         self.image_paths_widget = QWidget()
-        self.image_paths_layout = QVBoxLayout(self.image_paths_widget)  # Changed to QVBoxLayout for vertical scrolling
+        self.image_paths_layout = QVBoxLayout(self.image_paths_widget)
         self.image_paths_scroll_area.setWidget(self.image_paths_widget)
         self.layout.addWidget(self.image_paths_scroll_area)
 
-        # Label for image paths
-        self.images_label = QLabel("No images selected.")
-        font = self.images_label.font()  # Get the current font
-        font.setItalic(True)  # Set the font to italic
-        self.images_label.setFont(font)  # Apply the modified font to the label
+        # label for image paths
+        self.images_label = QLabel()
+        font = self.images_label.font()
+        font.setItalic(True)
+        self.images_label.setFont(font)
         self.images_label.setStyleSheet("color: #888;")
         self.layout.addWidget(self.images_label)
 
-        # Evaluate button
+        # evaluate button
         self.evaluate_button = QPushButton("Evaluate Property")
         self.evaluate_button.setStyleSheet("""
             padding: 12px 24px;
@@ -83,7 +88,7 @@ class PropertyEvaluationApp(QWidget):
         self.evaluate_button.clicked.connect(self.evaluate_property)
         self.layout.addWidget(self.evaluate_button)
 
-        # Results display
+        # results display
         self.results_label = QLabel("Results will be shown here.")
         self.results_label.setFont(QFont("Arial", 12))
         self.results_label.setStyleSheet("color: #333;")
@@ -91,55 +96,37 @@ class PropertyEvaluationApp(QWidget):
 
         self.setLayout(self.layout)
 
-        # Initialize the list of selected images and paths
+        # initialize the list of selected images and paths
         self.selected_images = []
         self.selected_paths = []
 
     def select_images(self):
-        # Open a file dialog to select multiple images
         file_paths, _ = QFileDialog.getOpenFileNames(self, "Select Property Images", "", "Images (*.png *.jpg *.jpeg)")
         if file_paths:
-            # Limit the number of selected images to 3
             file_paths = file_paths[:3]
-
-            # Add the selected images to the list
             self.selected_images.extend(file_paths)
-
-            # Clear the current image previews and paths
             self.update_image_previews()
             self.update_image_paths()
 
-            # Check if the images exceed 3, and display scroll area if needed
-            if len(self.selected_images) >= 3:
-                self.image_preview_scroll_area.setVisible(True)
-
     def update_image_previews(self):
-        # Clear the current layout items (for both images and paths)
         for i in reversed(range(self.image_preview_layout.count())):
             widget = self.image_preview_layout.itemAt(i).widget()
             if widget is not None:
                 widget.deleteLater()
 
-        # Add the selected images to the preview area
         for image_path in self.selected_images:
             label = QLabel(self)
             pixmap = QPixmap(image_path)
-            pixmap = pixmap.scaled(100, 100, Qt.KeepAspectRatio)  # Resize image to fit
+            pixmap = pixmap.scaled(100, 100, Qt.KeepAspectRatio)
             label.setPixmap(pixmap)
             self.image_preview_layout.addWidget(label)
 
-        # Hide scroll area initially until 3 images are selected
-        if len(self.selected_images) < 3:
-            self.image_preview_scroll_area.setVisible(False)
-
     def update_image_paths(self):
-        # Clear the paths layout first
         for i in reversed(range(self.image_paths_layout.count())):
             widget = self.image_paths_layout.itemAt(i).widget()
             if widget is not None:
                 widget.deleteLater()
 
-        # Add the paths to the paths section
         for path in self.selected_images:
             path_label = QLabel(path)
             path_label.setStyleSheet("""
@@ -149,16 +136,47 @@ class PropertyEvaluationApp(QWidget):
             """)
             self.image_paths_layout.addWidget(path_label)
 
-        # Hide scroll area initially until 3 paths are selected
-        if len(self.selected_images) < 3:
-            self.image_paths_scroll_area.setVisible(False)
-
     def evaluate_property(self):
         location = self.location_input.text()
+
+        # Check if location is provided and at least one image is selected
         if not location or len(self.selected_images) == 0:
             self.results_label.setText("Please select images and provide a location.")
-        else:
-            self.results_label.setText(f"Evaluating property at {location} with {len(self.selected_images)} images.")
+            return
+
+
+        image_features = [self.image_processing.get_image_features(img_path) for img_path in self.selected_images]
+        img = np.mean(image_features, axis=0).reshape(1, -1)
+
+        lat, lon = self.location_processing.get_lat_lon(location)
+        location_data = np.array([lat, lon], dtype='float32').reshape(1, -1)
+
+        location_data = self.location_processing.scaler.fit_transform(location_data)
+
+        predictions = self.model.predict([img, location_data])
+
+        mean_value = 500000
+        std_value = 200000
+
+        # handle predictions [room_count, kitchens, bathrooms, normalized_value]
+        predicted_room_count = predictions[0][0][0]
+        predicted_kitchens = predictions[1][0][0]
+        predicted_bathrooms = predictions[2][0][0]
+        predicted_value_normalized = predictions[3][0][0]  # normalized value predicted by the model
+
+        predicted_room_count = round(predicted_room_count)
+        predicted_kitchens = round(predicted_kitchens)
+        predicted_bathrooms = round(predicted_bathrooms)
+
+        # denormalize the price (property value)
+        predicted_value = (predicted_value_normalized * std_value) + mean_value
+
+        # display the evaluation results
+        self.results_label.setText(f"Evaluating property at {location} with {len(self.selected_images)} images.\n"
+                                   f"Predicted Room Count: {predicted_room_count:.2f}\n"
+                                   f"Predicted Kitchens: {predicted_kitchens:.2f}\n"
+                                   f"Predicted Bathrooms: {predicted_bathrooms:.2f}\n"
+                                   f"Predicted Property Value: {predicted_value:.2f}€")
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
